@@ -1,0 +1,23 @@
+{
+  "name": "depop",
+  "version": "1.0.0",
+  "description": "Backend API for a Depop-like marketplace app built with Node.js, Express, and MongoDB.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon server.js"
+  },
+  "author": "shruti",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.10.0",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-fileupload": "^1.5.2",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.6.1",
+    "nodemon": "^3.1.14"
+  }
+}
