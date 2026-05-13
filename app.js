@@ -10,6 +10,7 @@ const fileUpload = require('express-fileupload');
 //import routes
 const userRoutes=require('./routes/user')
 const productRoutes=require('./routes/product')
+const wishlistRoutes=require('./routes/wishlist')
 
 
 //connect with database
@@ -42,6 +43,7 @@ app.use(fileUpload(
 
 app.use('/user',userRoutes)
 app.use('/product',productRoutes)
+app.use('/wishlist',wishlistRoutes)
 
 
 
