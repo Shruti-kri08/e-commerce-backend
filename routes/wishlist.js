@@ -83,7 +83,7 @@ router.post('/addByProductId/:id', async (req, res) => {
 
 })
 
-//get all products from wishlist
+//get all wishlist products
 router.get('/savedProduct', async (req, res) => {
     try {
         const token = req.headers.authorization.split(" ")[1]
@@ -104,8 +104,7 @@ router.get('/savedProduct', async (req, res) => {
     }
 
 })
-
-//get all saved product by category
+// get all wishlist products by category
 router.get('/savedProductByCategory/:category', async (req, res) => {
     try {
         const token = req.headers.authorization.split(" ")[1]
@@ -126,16 +125,12 @@ router.get('/savedProductByCategory/:category', async (req, res) => {
                 imageUrl:c.imageUrl
 
             }) 
-         
            }
-
            if(products.length==0){
              return res.status(500).json( {message: "No product found for this category"})
            }
            res.status(200).json({products})
-
         })
-
     }
     catch (err) {
         console.log(err);
