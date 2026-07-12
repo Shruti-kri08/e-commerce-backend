@@ -26,7 +26,8 @@ const connectWithDatabase = async () => {
     }
 }
 
-
+const dns = require('dns');
+dns.setServers(['8.8.8.8']);
 connectWithDatabase()
 
 app.use(bodyParser.json())
