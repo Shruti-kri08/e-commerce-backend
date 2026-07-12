@@ -1,9 +1,11 @@
 require('dotenv').config();
 const express = require('express')
 const app = express()
+const cors = require('cors');
 const mongoose = require('mongoose')
 const bodyParser=require('body-parser');
 const fileUpload = require('express-fileupload');
+
 
 
 
@@ -29,7 +31,7 @@ const connectWithDatabase = async () => {
 const dns = require('dns');
 dns.setServers(['8.8.8.8']);
 connectWithDatabase()
-
+app.use(cors());
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded())
 app.use(fileUpload(
