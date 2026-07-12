@@ -74,6 +74,7 @@ router.get('/getCart', async (req, res) => {
 });
 
 
+//increase qty of product
 router.put('/increaseQty/:productId', async (req, res) => {
     try {
         const token = req.headers.authorization.split(" ")[1];
@@ -117,6 +118,7 @@ router.put('/increaseQty/:productId', async (req, res) => {
     }
 });
 
+//decrease qty of product
 router.put('/decreaseQty/:productId', async (req, res) => {
     try {
         const token = req.headers.authorization.split(" ")[1];
@@ -157,6 +159,80 @@ router.put('/decreaseQty/:productId', async (req, res) => {
 
         return res.status(200).json({
             message: "Quantity updated",
+            cart
+        });
+
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            error: err.message
+        });
+    }
+});
+
+//remove one item from cart
+router.delete('/removeItem/:productId', async (req, res) => {
+    try {
+        const token = req.headers.authorization.split(" ")[1];
+        const tokenData = jwt.verify(token, process.env.SECRET_KEY);
+
+        const cart = await Cart.findOne({ userId: tokenData.userId });
+
+        if (!cart) {
+            return res.status(404).json({
+                message: "Cart not found"
+            });
+        }
+
+        const productExist = cart.items.find(
+            (item) => item.productId.toString() === req.params.productId
+        );
+
+        if (!productExist) {
+            return res.status(404).json({
+                message: "Product not found in cart"
+            });
+        }
+
+        cart.items = cart.items.filter(
+            (item) => item.productId.toString() !== req.params.productId
+        );
+
+        await cart.save();
+
+        return res.status(200).json({
+            message: "Product removed successfully",
+            cart
+        });
+
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            error: err.message
+        });
+    }
+});
+
+//Clear cart
+router.delete('/clearCart', async (req, res) => {
+    try {
+        const token = req.headers.authorization.split(" ")[1];
+        const tokenData = jwt.verify(token, process.env.SECRET_KEY);
+
+        const cart = await Cart.findOne({ userId: tokenData.userId });
+
+        if (!cart) {
+            return res.status(404).json({
+                message: "Cart not found"
+            });
+        }
+
+        cart.items = [];
+
+        await cart.save();
+
+        return res.status(200).json({
+            message: "Cart cleared successfully",
             cart
         });
 
