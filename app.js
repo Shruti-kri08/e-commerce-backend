@@ -17,7 +17,7 @@ const wishlistRoutes=require('./routes/wishlist')
 const connectWithDatabase = async () => {
     try {
         await mongoose.connect(process.env.MONGODB_URL)
-        console.log("connect with DB...");
+        console.log("connect with DB");
         
     }
     catch (err) {
