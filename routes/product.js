@@ -54,7 +54,7 @@ router.post('/upload', async (req, res) => {
 //get all product
 router.get('/all-products', async (req, res) => {
   try {
-    const allProducts = await Product.find().select("product_name title description  category price imageUrl userId").populate('userId', 'fullName')
+    const allProducts = await Product.find().select("product_name title description  category price imageUrl userId").populate('userId', 'fullname')
     res.status(200).json({ allProducts: allProducts })
   }
   catch (err) {
