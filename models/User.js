@@ -22,7 +22,12 @@ const userSchema = new mongoose.Schema({
     type: String,
     minlength: 8,
     required: true
-  }
+  },
+  role: {
+  type: String,
+  required: true,
+  enum: ["Seller", "Buyer"]
+}
 }, {
   timestamps: true
 });

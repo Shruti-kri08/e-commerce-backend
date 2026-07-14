@@ -23,7 +23,8 @@ router.post('/signup', async (req, res) => {
             fullname: req.body.fullname,
             email: req.body.email,
             phone: req.body.phone,
-            password: hash
+            password: hash,
+            role:req.body.role
         })
         const result = await newUser.save()
         console.log("data saved,new user signuped..!");
@@ -36,6 +37,7 @@ router.post('/signup', async (req, res) => {
                 fullname: req.body.fullname,
                 email: req.body.email,
                 phone: req.body.phone,
+                role:req.body.role
             })
 
     }
