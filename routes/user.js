@@ -1,111 +1,436 @@
-require('dotenv').config();
-const express = require('express')
-const router = express.Router()
-const User = require('../models/User')
-const mongoose = require('mongoose')
-const bcrypt = require('bcrypt')
-const jwt=require('jsonwebtoken')
+const express = require("express");
+const router = express.Router();
+
+const User = require("../models/User");
+
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const validator = require("validator");
+const rateLimit = require("express-rate-limit");
+
+const cloudinary = require("cloudinary").v2;
+
+// Cloudinary Config
+cloudinary.config({
+    cloud_name: process.env.CLOUD_NAME,
+    api_key: process.env.API_KEY,
+    api_secret: process.env.API_SECRET
+});
+
+// Rate Limiter
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    message: {
+        success: false,
+        message: "Too many requests. Please try again later."
+    }
+});
 
 
-//Signup API
-router.post('/signup', async (req, res) => {
+router.post("/register", limiter, async (req, res) => {
+
     try {
-        const data = await User.find({ email: req.body.email })
 
-        if (data.length > 0) {
-            return res.status(500).json({ msg: "email allready registered" })
+        const {
+            fullName,
+            email,
+            password,
+            phone,
+            address
+        } = req.body;
+
+        // Required Fields
+        if (!fullName || !email || !password || !phone) {
+
+            return res.status(400).json({
+                success: false,
+                message: "All fields are required"
+            });
+
         }
 
-        const hash = await bcrypt.hash(req.body.password,8)
-        // console.log("hash pass : ", hash);
+        // Email Validation
+        if (!validator.isEmail(email)) {
 
-        const newUser = new User({
-            fullname: req.body.fullname,
-            email: req.body.email,
-            phone: req.body.phone,
-            password: hash,
-            role:req.body.role
-        })
-        const result = await newUser.save()
-        console.log("data saved,new user signuped..!");
-        
-        // console.log("newUser :", newUser);
-        console.log("result ", result)
+            return res.status(400).json({
+                success: false,
+                message: "Invalid Email"
+            });
 
-        return res.status(200).json(
+        }
+
+        // Password Validation
+        if (password.length < 8) {
+
+            return res.status(400).json({
+                success: false,
+                message: "Password must be at least 8 characters"
+            });
+
+        }
+
+        // Existing User
+        const existingUser = await User.findOne({ email });
+
+        if (existingUser) {
+
+            return res.status(400).json({
+                success: false,
+                message: "Email already exists"
+            });
+
+        }
+
+        // Image Check
+        if (!req.files || !req.files.profileImage) {
+
+            return res.status(400).json({
+                success: false,
+                message: "Profile Image Required"
+            });
+
+        }
+
+        // Upload Image
+        const image = req.files.profileImage;
+
+        const result = await cloudinary.uploader.upload(
+            image.tempFilePath,
             {
-                fullname: req.body.fullname,
-                email: req.body.email,
-                phone: req.body.phone,
-                role:req.body.role
-            })
+                folder: "Marketplace/Profile"
+            }
+        );
+
+        // Hash Password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Create User
+        const user = await User.create({
+
+            fullName,
+
+            email,
+
+            password: hashedPassword,
+
+            phone,
+
+            address: address || "",
+
+            profileImage: result.secure_url,
+
+            profileImageId: result.public_id
+
+        });
+        const newUser = await User.findById(user._id).select("-password");
+
+
+        res.status(201).json({
+
+            success: true,
+
+            message: "Registration Successful. Please Login.",
+
+
+            user:newUser
+
+        });
 
     }
+
     catch (err) {
-         res.status(500).json({
-            err: "something is worng",
-            error: err
-        })
-    }
 
+        res.status(500).json({
 
-})
+            success: false,
 
-//Login API
-router.post('/login', async(req, res) => {
-   try{
- const data=await User.find({email:req.body.email})
-    if(data.length==0){
-        return res.status(400).json({msg:"Email not signuped"})
-    }
+            message: err.message
 
-    const check=await bcrypt.compare(req.body.password,data[0].password)
-    if(!check){
-        return res.status(400).json({msg:"Invalid Password"})
-    }
-
-    const token=jwt.sign({
-        fullname:data[0].fullname,
-        email:data[0].email,
-        userId:data[0]._id
-    },process.env.SECRET_KEY,{expiresIn:"30d"})
-
-
-    res.status(200).json({
-        fullname:data[0].fullname,
-        email:data[0].email,
-        userId:data[0]._id,
-        token:token
-    })
-
-   }
-   catch(err){
-     console.log(err);
-     res.status(500).json({
-     
-      
-            err: "something is worng",
-            error: err
-        })
-   }
-})
-
-
-//get all user
-router.get('/allUser',async(req,res)=>{
-    try{
-        const all_users=await User.find()
-    res.status(200).json({
-        all_users:all_users
-    })
+        });
 
     }
-    catch(err){
-            res.status(500).json({
-            err: "something is worng",
-            error: err
-        })
-    }
-})
 
-module.exports = router
+});
+
+
+// LOGIN
+
+router.post("/login", limiter, async (req, res) => {
+
+    try {
+
+        const { email, password } = req.body;
+
+        // Required Fields
+        if (!email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: "Email and Password are required"
+            });
+        }
+
+        // Email Validation
+        if (!validator.isEmail(email)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid Email"
+            });
+        }
+
+        // Find User
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        // Compare Password
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if (!isMatch) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid Password"
+            });
+        }
+
+        // Generate Token
+        const token = jwt.sign(
+
+            {   fullName:user.fullName,
+                id: user._id,
+                 role: user.role
+            },
+
+            process.env.JWT_SECRET,
+
+            {
+                expiresIn: "7d"
+            }
+
+        );
+const userData = await User.findById(user._id).select("-password");
+        res.status(200).json({
+            success: true,
+            message: "Login Successful",
+            token,
+            user:userData
+        });
+
+    } catch (err) {
+
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+
+    }
+
+});
+
+// GET PROFILE
+
+router.get("/profile/:id", async (req, res) => {
+
+    try {
+
+        const user = await User.findById(req.params.id).select("-password");
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            user
+        });
+
+    } catch (err) {
+
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+
+    }
+
+});
+
+
+// UPDATE PROFILE
+
+router.put("/update-profile/:id", async (req, res) => {
+
+    try {
+
+        const { fullName, phone, address } = req.body;
+
+        const user = await User.findById(req.params.id);
+
+        if (!user) {
+
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+
+        }
+
+        // Update Normal Fields
+        if (fullName) user.fullName = fullName;
+        if (phone) user.phone = phone;
+        if (address) user.address = address;
+
+        // Update Profile Image
+        if (req.files && req.files.profileImage) {
+
+            // Delete Old Image
+            if (user.profileImageId) {
+
+                await cloudinary.uploader.destroy(user.profileImageId);
+
+            }
+
+            // Upload New Image
+            const result = await cloudinary.uploader.upload(
+
+                req.files.profileImage.tempFilePath,
+
+                {
+                    folder: "Marketplace/Profile"
+                }
+
+            );
+
+            user.profileImage = result.secure_url;
+            user.profileImageId = result.public_id;
+
+        }
+
+        await user.save();
+
+        res.status(200).json({
+
+            success: true,
+            message: "Profile Updated Successfully",
+            user
+
+        });
+
+    }
+
+    catch (err) {
+
+        res.status(500).json({
+
+            success: false,
+            message: err.message
+
+        });
+
+    }
+
+});
+
+
+
+//CHANGE PASSWORD
+
+router.put("/change-password/:id", async (req, res) => {
+
+    try {
+
+        const {
+
+            oldPassword,
+
+            newPassword
+
+        } = req.body;
+
+        const user = await User.findById(req.params.id);
+
+        if (!user) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message: "User not found"
+
+            });
+
+        }
+
+        // Compare Old Password
+        const isMatch = await bcrypt.compare(
+
+            oldPassword,
+
+            user.password
+
+        );
+
+        if (!isMatch) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message: "Old Password is incorrect"
+
+            });
+
+        }
+
+        // Password Length
+        if (newPassword.length < 8) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message: "Password must be at least 8 characters"
+
+            });
+
+        }
+
+        // Hash Password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        user.password = hashedPassword;
+
+        await user.save();
+
+        res.status(200).json({
+
+            success: true,
+
+            message: "Password Changed Successfully"
+
+        });
+
+    }
+
+    catch (err) {
+
+        res.status(500).json({
+
+            success: false,
+
+            message: err.message
+
+        });
+
+    }
+
+});
+module.exports = router;
