@@ -436,7 +436,7 @@ router.put("/change-password/:id", async (req, res) => {
 
 
 //Upload Profile Image
-const uploadProfileImage = async (req, res) => {
+router.put('/uploadProfileImage',async (req, res) => {
     try {
         const token = req.headers.authorization.split(" ")[1]
         const tokenData = jwt.verify(token, process.env.JWT_SECRET)
@@ -465,7 +465,7 @@ const uploadProfileImage = async (req, res) => {
 
     }
 }
-
+)
 
 
 module.exports = router;
