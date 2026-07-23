@@ -440,9 +440,9 @@ router.put('/uploadProfileImage',async (req, res) => {
     try {
         const token = req.headers.authorization.split(" ")[1]
         const tokenData = jwt.verify(token, process.env.JWT_SECRET)
-        const user = await User.findById(tokenData._id)
+        const user = await User.findById(tokenData.id)
 
-        console.log(user);
+        // console.log("user:",user);
 
         if (!req.files || !req.files.profileImage) {
             return res.status(500).json({ message: "Profile Image Required" })
