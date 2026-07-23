@@ -83,24 +83,24 @@ router.post("/register", limiter, async (req, res) => {
         }
 
         // Image Check
-        if (!req.files || !req.files.profileImage) {
+        // if (!req.files || !req.files.profileImage) {
 
-            return res.status(400).json({
-                success: false,
-                message: "Profile Image Required"
-            });
+        //     return res.status(400).json({
+        //         success: false,
+        //         message: "Profile Image Required"
+        //     });
 
-        }
+        // }
 
-        // Upload Image
-        const image = req.files.profileImage;
+        // // Upload Image
+        // const image = req.files.profileImage;
 
-        const result = await cloudinary.uploader.upload(
-            image.tempFilePath,
-            {
-                folder: "Marketplace/Profile"
-            }
-        );
+        // const result = await cloudinary.uploader.upload(
+        //     image.tempFilePath,
+        //     {
+        //         folder: "Marketplace/Profile"
+        //     }
+        // );
 
         // Hash Password
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -118,9 +118,9 @@ router.post("/register", limiter, async (req, res) => {
 
             address: address || "",
 
-            profileImage: result.secure_url,
+            // profileImage: result.secure_url,
 
-            profileImageId: result.public_id
+            // profileImageId: result.public_id
 
         });
         const newUser = await User.findById(user._id).select("-password");
