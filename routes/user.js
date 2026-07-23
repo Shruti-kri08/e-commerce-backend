@@ -433,4 +433,39 @@ router.put("/change-password/:id", async (req, res) => {
     }
 
 });
+
+
+//Upload Profile Image
+const uploadProfileImage = async (req, res) => {
+    try {
+        const token = req.headers.authorization.split(" ")[1]
+        const tokenData = jwt.verify(token, process.env.JWT_SECRET)
+        const user = await User.findById(tokenData._id)
+
+        console.log(user);
+
+        if (!req.files || !req.files.profileImage) {
+            return res.status(500).json({ message: "Profile Image Required" })
+        }
+        const uploadImage = await cloudinary.uploader.upload(req.files.profileImage.tempFilePath, {
+            folder: "Ecommerce/userProfile"
+        });
+        user.profileImage = uploadImage.secure_url
+        user.profileImageId = uploadImage.public_id
+        const data = await user.save()
+        res.status(200).json({
+            message: "Image uploaded",
+            data
+        })
+
+    }
+    catch (err) {
+        console.log(err);
+        res.status(500).json({ msg: 'something wrong' })
+
+    }
+}
+
+
+
 module.exports = router;
