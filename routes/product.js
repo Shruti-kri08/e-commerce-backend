@@ -20,7 +20,7 @@ router.post('/upload', async (req, res) => {
   try {
 
     const token = req.headers.authorization.split(" ")[1]
-    const tokendata = await jwt.verify(token, process.env.SECRET_KEY)
+    const tokendata = await jwt.verify(token, process.env.JWT_SECRET)
 
 
     console.log('tokenData : ', tokendata);
@@ -141,7 +141,7 @@ router.get('/byCategory/:category', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const token = req.headers.authorization.split(" ")[1]
-    const tokendata = await jwt.verify(token, process.env.SECRET_KEY)
+    const tokendata = await jwt.verify(token, process.env.JWT_SECRET)
 
     const product = await Product.findById(req.params.id)
 
@@ -181,7 +181,7 @@ router.delete('/:id', async (req, res) => {
 router.delete('/byUserId/:userId', async (req, res) => {
   try {
     const token = req.headers.authorization.split(" ")[1]
-    const tokendata = await jwt.verify(token, process.env.SECRET_KEY)
+    const tokendata = await jwt.verify(token, process.env.JWT_SECRET)
 
     if (tokendata.userId !== req.params.userId) {
       return res.status(500).json({ message: "you are not allowed to delete" })
