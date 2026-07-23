@@ -22,7 +22,11 @@ router.post('/upload', async (req, res) => {
     const token = req.headers.authorization.split(" ")[1]
     const tokendata = await jwt.verify(token, process.env.SECRET_KEY)
 
+
     console.log('tokenData : ', tokendata);
+    if(tokenData.role!=="seller"){
+      return res.status(500).json({message:"You are not allow"})
+    }
     const uploadImage = await cloudinary.uploader.upload(req.files.image.tempFilePath, {
       resource_type: 'image',
       folder: 'Product_image'
