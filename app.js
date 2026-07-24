@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express')
 const app = express()
-app.set("trust proxy", 1);
+// app.set("trust proxy", 1);
 const cors = require('cors');
 const mongoose = require('mongoose')
 const bodyParser=require('body-parser');
