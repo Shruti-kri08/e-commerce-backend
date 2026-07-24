@@ -20,10 +20,10 @@ router.post('/upload', async (req, res) => {
   try {
 
     const token = req.headers.authorization.split(" ")[1]
-    const tokendata = await jwt.verify(token, process.env.JWT_SECRET)
+    const tokenData = await jwt.verify(token, process.env.JWT_SECRET)
 
 
-    console.log('tokenData : ', tokendata);
+    // console.log('tokenData : ', tokenData,tokenData.role!=="seller",tokenData.role);
     if(tokenData.role!=="seller"){
       return res.status(500).json({message:"You are not allow"})
     }
@@ -42,9 +42,14 @@ router.post('/upload', async (req, res) => {
       imageUrl: uploadImage.secure_url,
       imageId: uploadImage.public_id
     })
-    await newProduct.save()
-
-    res.status(200).json({ message: "product uploaded..!!" })
+   const product= await newProduct.save()
+    const user=await User.findById(tokenData.id)
+    user.products.push(product._id)
+    await user.save()
+    res.status(200).json({ message: "product uploaded..!!" ,
+      product:product,
+      user:user
+    })
 
   }
   catch (err) {
