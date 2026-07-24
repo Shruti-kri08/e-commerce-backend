@@ -266,13 +266,14 @@ router.get("/profile/:id", async (req, res) => {
 
 // UPDATE PROFILE
 
-router.put("/update-profile/:id", async (req, res) => {
+router.put("/update-profile", async (req, res) => {
 
     try {
 
-        const { fullName, phone, address } = req.body;
-
-        const user = await User.findById(req.params.id);
+        const { fullName, phone, address,role } = req.body;
+        const token=req.headers.authorization.split(" ")[1]
+        const tokenData=await jwt.verify(token,process.env.JWT_SECRET)
+        const user = await User.findById(tokenData.id);
 
         if (!user) {
 
@@ -282,11 +283,20 @@ router.put("/update-profile/:id", async (req, res) => {
             });
 
         }
+        
 
         // Update Normal Fields
         if (fullName) user.fullName = fullName;
         if (phone) user.phone = phone;
         if (address) user.address = address;
+        if(role){
+            if(role=="seller" || role=="buyer"){
+                user.role=role
+            }
+            else{
+                return res.status(500).json({message:"Invalid role"})
+            }
+        }
 
         // Update Profile Image
         if (req.files && req.files.profileImage) {

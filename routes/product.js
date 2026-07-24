@@ -3,7 +3,7 @@ const express = require('express')
 const router = express.Router()
 const mongoose = require('mongoose')
 const Product = require('../models/Product')
-
+const User=require('../models/User')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const cloudinary = require('cloudinary').v2
@@ -18,13 +18,17 @@ cloudinary.config({
 //Upload product
 router.post('/upload', async (req, res) => {
   try {
-
+    console.log("run");
+    
     const token = req.headers.authorization.split(" ")[1]
     const tokenData = await jwt.verify(token, process.env.JWT_SECRET)
+  
+    const user=await User.findById(tokenData.id)
+console.log(user);
 
 
     // console.log('tokenData : ', tokenData,tokenData.role!=="seller",tokenData.role);
-    if(tokenData.role!=="seller"){
+    if(user.role!=="seller"){
       return res.status(500).json({message:"You are not allow"})
     }
     const uploadImage = await cloudinary.uploader.upload(req.files.image.tempFilePath, {
@@ -37,13 +41,12 @@ router.post('/upload', async (req, res) => {
       price: req.body.price,
       title: req.body.title,
       description: req.body.description,
-      userId: tokendata.userId,
+      userId:user._id,
       category: req.body.category,
       imageUrl: uploadImage.secure_url,
       imageId: uploadImage.public_id
     })
    const product= await newProduct.save()
-    const user=await User.findById(tokenData.id)
     user.products.push(product._id)
     await user.save()
     res.status(200).json({ message: "product uploaded..!!" ,
