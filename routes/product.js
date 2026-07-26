@@ -77,7 +77,7 @@ router.get('/all-products', async (req, res) => {
 })
 
 // product by id
-router.get('/:id', async (req, res) => {
+router.get('/byId/:id', async (req, res) => {
   try {
 
     const product = await Product.findById(req.params.id).select("product_name title description  category price imageUrl");
