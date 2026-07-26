@@ -144,6 +144,34 @@ router.get('/byCategory/:category', async (req, res) => {
 //   }
 // })
 
+//get latest product
+router.get("/latest-products", async (req, res) => {
+
+    try {
+
+        const latestProducts = await Product.find()
+            .select("product_name title description category price imageUrl userId")
+            .populate("userId", "fullName")
+            .sort({ _id: -1 })
+            .limit(5);
+
+        res.status(200).json({
+            success: true,
+            latestProducts
+        });
+
+    } catch (err) {
+
+        console.log(err);
+
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+
+    }
+
+});
 
 //delete product by id(product id)
 router.delete('/:id', async (req, res) => {
