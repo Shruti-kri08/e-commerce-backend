@@ -153,7 +153,7 @@ router.get("/latest-products", async (req, res) => {
             .select("product_name title description category price imageUrl userId")
             .populate("userId", "fullName")
             .sort({ _id: -1 })
-            .limit(4);
+            .limit(3);
 
         res.status(200).json({
             success: true,
